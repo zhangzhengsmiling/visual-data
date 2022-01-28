@@ -24,6 +24,42 @@ const json: any[] = [
   },
 ];
 
+class Point2D {
+  constructor(x: number = 0, y: number = 0) {
+    this.x = x;
+    this.y = y;
+  }
+  private x: number;
+  private y: number;
+  getX() {
+    return this.x;
+  }
+  setX(x: number) {
+    this.x = x;
+  }
+  getY() {
+    return this.y;
+  }
+  setY(y: number) {
+    this.y = y;
+  }
+}
+
+class Position extends Point2D {
+  constructor(x: number, y: number, zIndex: number = 0) {
+    super(x, y);
+    this.zIndex = zIndex;
+  }
+  private zIndex: number;
+  getZIndex() {
+    return this.zIndex;
+  }
+  setZIndex(zIndex: number) {
+    this.zIndex = zIndex;
+  }
+}
+
+
 const App = () => {
 
   const [container, setContainer] = useState<HTMLDivElement | null>(null)
