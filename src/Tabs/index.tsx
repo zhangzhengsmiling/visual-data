@@ -2,27 +2,28 @@ import React, { useState, useEffect } from 'react';
 
 interface ITabDataItem {
   key: string;
-  title: string;
+  label: string;
+  value: string;
 }
 
 export interface IPropsTab {
-  value: ITabDataItem[];
+  data: ITabDataItem[];
   defaultValue?: string;
   onChange?: (activeKey: ITabDataItem) => void;
 }
 
 const Tabs = (props: IPropsTab) => {
-  const { defaultValue, value, onChange } = props;
-  const [active, setActive] = useState(defaultValue || value[0]?.key);
+  const { defaultValue, data, onChange } = props;
+  const [active, setActive] = useState(defaultValue || data[0]?.key);
 
   useEffect(() => {
     if (typeof onChange === 'function')
-      onChange(value.find((item: ITabDataItem) => item.key === active) as ITabDataItem);
+      onChange(data.find((item: ITabDataItem) => item.key === active) as ITabDataItem);
   }, [active]);
 
   return (
     <div style={{ width: 400, height: 'auto' }}>
-      {value.map((item) => (
+      {data.map((item) => (
         <div
           key={item.key}
           style={{
@@ -41,7 +42,7 @@ const Tabs = (props: IPropsTab) => {
             setActive(item.key);
           }}
         >
-          {item.title}
+          {item.label}
         </div>
       ))}
     </div>

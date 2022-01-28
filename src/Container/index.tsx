@@ -29,13 +29,6 @@ const Container = (props: IPropsContainer) => {
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
   }, []);
-  // const _style = props.style || {
-  //   width: (400 / 1920) * document.documentElement.clientWidth,
-  //   height: 400 * (document.documentElement.clientWidth / 1920),
-  //   background: 'rgba(36, 57, 74, 1)',
-  //   border: '1px solid rgba(255, 255, 255, 0.2)',
-  //   boxShadow: '0px 0px 2px 2px rgba(255, 255, 255, 0.2)',
-  // };
 
   return (
     <div className="container" style={style}>
