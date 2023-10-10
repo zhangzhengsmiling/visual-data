@@ -54,10 +54,10 @@ class Position extends Point2D {
     this.zIndex = zIndex;
   }
 }
-const conponentsMap = new Map();
-conponentsMap.set('Container', Container);
-conponentsMap.set('Tabs', Tabs);
-conponentsMap.set('Text', Text);
+const componentsMap = new Map();
+componentsMap.set('Container', Container);
+componentsMap.set('Tabs', Tabs);
+componentsMap.set('Text', Text);
 
 
 const data = [
@@ -87,7 +87,7 @@ const data = [
     },
   },
   {
-    id: "CONTAINER#3",
+    id: 'CONTAINER#3',
     type: 'Container',
     position: {
       x: 860,
@@ -106,14 +106,13 @@ const data = [
       y: 20,
       zIndex: 1,
     },
-    style: {
-    },
+    style: {},
     subscriber: {
       id: 'a',
       parser: (v: any) => ({
-        title: v.label
-      })
-    }
+        title: v.label,
+      }),
+    },
   },
   {
     id: 'TEXT#2',
@@ -148,7 +147,7 @@ const data = [
     type: 'Tabs',
     position: {
       x: 600,
-      y: 80
+      y: 80,
     },
     data: [
       { key: 'a', label: 'a', value: '1' },
@@ -185,7 +184,7 @@ const App = () => {
     data
       .map((item: any) => ({
         ...item,
-        type: conponentsMap.get(item.type)
+        type: componentsMap.get(item.type)
       }))
     )
 
