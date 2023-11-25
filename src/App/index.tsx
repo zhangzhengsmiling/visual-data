@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import Text from '@/Text';
-import Container from '@/Container';
-import Tabs from '@/Tabs';
+import Text from '@/packages/Text';
+import Container from '@/packages/Container';
+import Tabs from '@/packages/Tabs';
 import SubscribeContainer from '@/base/SubscribeContainer';
 import PublishContainer from '@/base/PublishContainer';
-import Moveable from '../Movable';
+import Moveable from '@/base/Movable';
+import Loading from '../packages/Loading'
 
 const json: any[] = [
   {
@@ -58,7 +59,7 @@ const componentsMap = new Map();
 componentsMap.set('Container', Container);
 componentsMap.set('Tabs', Tabs);
 componentsMap.set('Text', Text);
-
+componentsMap.set('Loading', Loading);
 
 const data = [
   {
@@ -154,6 +155,19 @@ const data = [
       { key: 'b', label: 'b', value: '2' },
       { key: 'c', label: 'c', value: '3' },
     ]
+  },
+  {
+    id: 'Loading#1',
+    type: 'Loading',
+    position: {
+      x: 0,
+      y: 80,
+    },
+    data: [
+      { key: 'a', label: 'a', value: '1' },
+      { key: 'b', label: 'b', value: '2' },
+      { key: 'c', label: 'c', value: '3' },
+    ]
   }
 ]
 
@@ -205,6 +219,8 @@ const App = () => {
       })
     })
   }
+
+  console.log(ds, 'data...')
 
   return (
     <div
