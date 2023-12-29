@@ -5,6 +5,7 @@ import Tabs from '@/packages/Tabs';
 import SubscribeContainer from '@/base/SubscribeContainer';
 import PublishContainer from '@/base/PublishContainer';
 import Moveable from '@/base/Movable';
+import ResizeContainer, { EnumResizeDirection } from '@/base/ResizeContainer';
 import Loading from '../packages/Loading'
 
 const json: any[] = [
@@ -220,7 +221,70 @@ const App = () => {
     })
   }
 
-  console.log(ds, 'data...')
+
+  const resize = (component: any, direction: EnumResizeDirection, { dx, dy }: { dx: number; dy: number }) => {
+    console.log(dx, dy)
+    setDs((ds) => {
+      return ds.map((item) => {
+        if (component.id === item.id) {
+          switch (direction) {
+            case EnumResizeDirection.RIGHT_BOTTOM:
+              return {
+                ...item,
+               attr: {
+                 ...item.attr || {},
+                 width: item.attr.width + dx,
+                 height: item.attr.height + dy
+               }
+              }
+            case EnumResizeDirection.BOTTOM:
+              return {
+                ...item,
+                attr: {
+                  ...item.attr || {},
+                  height: item.attr.height + dy
+                }
+              }
+            case EnumResizeDirection.RIGHT:
+              return {
+                ...item || {},
+                attr: {
+                  ...item.attr,
+                  width: item.attr.width + dx
+                }
+              }
+            case EnumResizeDirection.TOP:
+              return {
+                ...item,
+                position: {
+                  ...item.position,
+                  y: item.position.y + dy
+                },
+                attr: {
+                  ...item.attr || {},
+                  height: item.position.height - dy,
+                }
+              }
+            case EnumResizeDirection.LEFT:
+              return {
+                ...item,
+                position: {
+                  ...item.position,
+                  x: item.position.x + dx
+                },
+                attr: {
+                  ...item.attr || {},
+                  width: item.position.width - dx,
+                }
+              }
+            default:
+              return item
+          }
+        }
+        return item
+      })
+    })
+  }
 
   return (
     <div
@@ -243,9 +307,19 @@ const App = () => {
               changePosition(component, position);
             }}
           >
-            {
-              renderComponent(component)
-            }
+            <ResizeContainer
+              width={component.attr?.width}
+              height={component.attr?.height}
+              resizable={Boolean(component.attr?.width) && Boolean(component.attr?.height)}
+              container={container!}
+              onResize={(direction, offset) => {
+                resize(component, direction, offset);
+              }}
+            >
+              {
+                renderComponent(component)
+              }
+            </ResizeContainer>
           </Moveable>
         ))
       }
