@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Text from '@/packages/Text';
 import Container from '@/packages/Container';
 import Tabs from '@/packages/Tabs';
@@ -7,6 +7,7 @@ import PublishContainer from '@/base/PublishContainer';
 import Moveable from '@/base/Movable';
 import ResizeContainer, { EnumResizeDirection } from '@/base/ResizeContainer';
 import Loading from '../packages/Loading'
+import useFrameSelect from '@/base/hooks/useFrameSelect'
 
 const json: any[] = [
   {
@@ -286,6 +287,13 @@ const App = () => {
     })
   }
 
+
+  const [pointBegin, setPointBegin] = useState({ x: 0, y: 0 });
+  const [pointEnd, setPointEnd] = useState({ x: 0, y: 0 });
+  const [visible, setVisible] = useState(false);
+
+  const { element: ele } = useFrameSelect({ container })
+
   return (
     <div
       style={{
@@ -295,7 +303,19 @@ const App = () => {
         background: 'rgb(13, 28, 38)',
       }}
       ref={setContainer}
+      onMouseDown={(e) => {
+        setVisible(true);
+        setPointBegin({
+          x: e.clientX,
+          y: e.clientY
+        })
+        setPointEnd({
+          x: e.clientX,
+          y: e.clientY
+        })
+      }}
     >
+      {ele}
       {/* BUG:订阅组件和发布组件渲染的顺序对于初始值会有影响 */}
       {
         ds.map((component) => (
