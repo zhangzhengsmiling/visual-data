@@ -1,14 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import ContextPositionAbsolute, {
-  PositionAbsoluteContainer,
-  createPositionAbsoluteContainerValue,
-} from '@/base/ContextPositionAbsolute';
-import Text from '@/Text';
-import Container from '@/Container';
-import Tabs from '@/Tabs';
+import React, { useEffect, useMemo, useState } from 'react';
+import Text from '@/packages/Text';
+import Container from '@/packages/Container';
+import Tabs from '@/packages/Tabs';
 import SubscribeContainer from '@/base/SubscribeContainer';
 import PublishContainer from '@/base/PublishContainer';
-import Moveable from '../Movable';
+import Moveable from '@/base/Movable';
+import ResizeContainer, { EnumResizeDirection } from '@/base/ResizeContainer';
+import Loading from '../packages/Loading'
+import useFrameSelect from '@/base/hooks/useFrameSelect'
 
 const json: any[] = [
   {
@@ -24,83 +23,276 @@ const json: any[] = [
   },
 ];
 
+class Point2D {
+  constructor(x: number = 0, y: number = 0) {
+    this.x = x;
+    this.y = y;
+  }
+  private x: number;
+  private y: number;
+  getX() {
+    return this.x;
+  }
+  setX(x: number) {
+    this.x = x;
+  }
+  getY() {
+    return this.y;
+  }
+  setY(y: number) {
+    this.y = y;
+  }
+}
+
+class Position extends Point2D {
+  constructor(x: number, y: number, zIndex: number = 0) {
+    super(x, y);
+    this.zIndex = zIndex;
+  }
+  private zIndex: number;
+  getZIndex() {
+    return this.zIndex;
+  }
+  setZIndex(zIndex: number) {
+    this.zIndex = zIndex;
+  }
+}
+const componentsMap = new Map();
+componentsMap.set('Container', Container);
+componentsMap.set('Tabs', Tabs);
+componentsMap.set('Text', Text);
+componentsMap.set('Loading', Loading);
+
+const data = [
+  {
+    id: 'CONTAINER#1',
+    type: 'Container',
+    position: {
+      x: 440,
+      y: 20,
+    },
+    attr: {
+      width: 200,
+      height: 100,
+      border: '1px solid #eee8',
+    },
+  },
+  {
+    id: 'CONTAINER#2',
+    type: 'Container',
+    position: {
+      x: 20,
+      y: 20,
+    },
+    attr: {
+      width: 100,
+      height: 100,
+    },
+  },
+  {
+    id: 'CONTAINER#3',
+    type: 'Container',
+    position: {
+      x: 860,
+      y: 20,
+    },
+    attr: {
+      width: 100,
+      height: 100,
+    },
+  },
+  {
+    id: 'TEXT#1',
+    type: 'Text',
+    position: {
+      x: 440,
+      y: 20,
+      zIndex: 1,
+    },
+    style: {},
+    subscriber: {
+      id: 'a',
+      parser: (v: any) => ({
+        title: v.label,
+      }),
+    },
+  },
+  {
+    id: 'TEXT#2',
+    type: 'Text',
+    position: {
+      x: 600,
+      y: 20,
+      zIndex: 1,
+    },
+    style: {
+    },
+    data: {
+      title: '我好吗？太阳如常升起。'
+    }
+  },
+  {
+    id: 'TABS#1',
+    type: 'Tabs',
+    position: {
+      x: 400,
+      y: 80
+    },
+    data: [
+      { key: '1', label: '1', value: '1' },
+      { key: '2', label: '2', value: '2' },
+      { key: '3', label: '3', value: '3' },
+    ],
+    publisher: { fnKey: 'onChange', id: 'a' }
+  },
+  {
+    id: 'TABS#2',
+    type: 'Tabs',
+    position: {
+      x: 600,
+      y: 80,
+    },
+    data: [
+      { key: 'a', label: 'a', value: '1' },
+      { key: 'b', label: 'b', value: '2' },
+      { key: 'c', label: 'c', value: '3' },
+    ]
+  },
+  {
+    id: 'Loading#1',
+    type: 'Loading',
+    position: {
+      x: 0,
+      y: 80,
+    },
+    data: [
+      { key: 'a', label: 'a', value: '1' },
+      { key: 'b', label: 'b', value: '2' },
+      { key: 'c', label: 'c', value: '3' },
+    ]
+  }
+]
+
+const renderComponent = (component: any): React.ReactChild | React.ReactChild[] => {
+  if (component.subscriber) {
+    return (
+      <SubscribeContainer subscriberID={component.subscriber.id} parser={component.subscriber.parser}>
+        <component.type data={component.data} attr={component.attr} />
+      </SubscribeContainer>
+    )
+  }
+  if (component.publisher) {
+   return (
+      <PublishContainer publishID={component.publisher.id} fnKey={component.publisher.dnKey}>
+        <component.type data={component.data} attr={component.attr} />
+      </PublishContainer>
+    )
+  }
+  return (
+    <component.type data={component.data} attr={component.attr} />
+  )
+}
+
 const App = () => {
 
   const [container, setContainer] = useState<HTMLDivElement | null>(null)
+  const [ds, setDs] = useState<any[]>(
+    data
+      .map((item: any) => ({
+        ...item,
+        type: componentsMap.get(item.type)
+      }))
+    )
 
-  const [ds, setDs] = useState<any[]>([
-    {
-      id: 'CONTAINER#1',
-      type: Container,
-      style: {
-        x: 440,
-        y: 20,
-        width: 100,
-        height: 100,
-      },
-    },
-    {
-      id: 'CONTAINER#2',
-      type: Container,
-      style: {
-        x: 20,
-        y: 20,
-        width: 100,
-        height: 100,
-      },
-    },
-    {
-      id: "CONTAINER#3",
-      type: Container,
-      style: {
-        x: 860,
-        y: 20,
-        width: 100,
-        height: 100,
-      },
-    },
-    {
-      id: 'TEXT#1',
-      type: Text,
-      style: {
-        x: 440,
-        y: 20,
-        zIndex: 1,
-      },
-      data: {
-        title: '我好吗？太阳如常升起。'
-      }
-    },
-    {
-      id: 'TABS#1',
-      type: Tabs,
-      style: {
-        x: 400,
-        y: 80
-      },
-      data: [
-        { key: '1', label: '1', value: '1' },
-        { key: '2', label: '2', value: '2' },
-        { key: '3', label: '3', value: '3' },
-      ]
-    }
-  ])
-
-useEffect(() => {
-  setTimeout(() => {
-    setDs(ds => ds.map(item => {
-      if (item.id === 'TEXT#1') {
-        return {
-          ...item,
-          data: {
-            title: '我很好啊'
+  const changePosition = (component: any, position: { dx: number; dy: number }) => {
+    setDs(ds => {
+      return ds.map((item, _idx) => {
+        if (component.id === item.id) {
+          return {
+            ...item,
+            position: {
+              x: item.position.x + position.dx,
+              y: item.position.y + position.dy,
+              zIndex: item.position.zIndex,
+            }
           }
         }
-      }
-      return item
-    }))
-  }, 3000)
-}, [])
+        else return item
+      })
+    })
+  }
+
+
+  const resize = (component: any, direction: EnumResizeDirection, { dx, dy }: { dx: number; dy: number }) => {
+    console.log(dx, dy)
+    setDs((ds) => {
+      return ds.map((item) => {
+        if (component.id === item.id) {
+          switch (direction) {
+            case EnumResizeDirection.RIGHT_BOTTOM:
+              return {
+                ...item,
+               attr: {
+                 ...item.attr || {},
+                 width: item.attr.width + dx,
+                 height: item.attr.height + dy
+               }
+              }
+            case EnumResizeDirection.BOTTOM:
+              return {
+                ...item,
+                attr: {
+                  ...item.attr || {},
+                  height: item.attr.height + dy
+                }
+              }
+            case EnumResizeDirection.RIGHT:
+              return {
+                ...item || {},
+                attr: {
+                  ...item.attr,
+                  width: item.attr.width + dx
+                }
+              }
+            case EnumResizeDirection.TOP:
+              return {
+                ...item,
+                position: {
+                  ...item.position,
+                  y: item.position.y + dy
+                },
+                attr: {
+                  ...item.attr || {},
+                  height: item.position.height - dy,
+                }
+              }
+            case EnumResizeDirection.LEFT:
+              return {
+                ...item,
+                position: {
+                  ...item.position,
+                  x: item.position.x + dx
+                },
+                attr: {
+                  ...item.attr || {},
+                  width: item.position.width - dx,
+                }
+              }
+            default:
+              return item
+          }
+        }
+        return item
+      })
+    })
+  }
+
+
+  const [pointBegin, setPointBegin] = useState({ x: 0, y: 0 });
+  const [pointEnd, setPointEnd] = useState({ x: 0, y: 0 });
+  const [visible, setVisible] = useState(false);
+
+  const { element: ele } = useFrameSelect({ container })
 
   return (
     <div
@@ -111,112 +303,48 @@ useEffect(() => {
         background: 'rgb(13, 28, 38)',
       }}
       ref={setContainer}
+      onMouseDown={(e) => {
+        setVisible(true);
+        setPointBegin({
+          x: e.clientX,
+          y: e.clientY
+        })
+        setPointEnd({
+          x: e.clientX,
+          y: e.clientY
+        })
+      }}
     >
+      {ele}
       {/* BUG:订阅组件和发布组件渲染的顺序对于初始值会有影响 */}
       {
         ds.map((component) => (
-            <Moveable key={component.id} container={container} position={{ x: component.style.x, y: component.style.y }} onMove={(position) => {
-              setDs(ds => {
-                return ds.map((item, _idx) => {
-                  if (component.id === item.id) {
-                    return {
-                      ...item,
-                      style: {
-                        x: item.style.x + position.dx,
-                        y: item.style.y + position.dy
-                      }
-                    }
-                  }
-                  else return item
-                })
-              })
-            }}>
-              <component.type data={component.data} />
-            </Moveable>
+          <Moveable
+            key={component.id}
+            container={container}
+            position={component.position}
+            onMove={(position) => {
+              changePosition(component, position);
+            }}
+          >
+            <ResizeContainer
+              width={component.attr?.width}
+              height={component.attr?.height}
+              resizable={Boolean(component.attr?.width) && Boolean(component.attr?.height)}
+              container={container!}
+              onResize={(direction, offset) => {
+                resize(component, direction, offset);
+              }}
+            >
+              {
+                renderComponent(component)
+              }
+            </ResizeContainer>
+          </Moveable>
         ))
       }
     </div>
   )
-  return (
-    <div
-      style={{
-        position: 'relative',
-        width: '100vw',
-        height: '100vh',
-        background: 'rgb(13, 28, 38)',
-      }}
-    >
-      {/* BUG:订阅组件和发布组件渲染的顺序对于初始值会有影响 */}
-      <ContextPositionAbsolute.Provider value={createPositionAbsoluteContainerValue(440, 20)}>
-        <PositionAbsoluteContainer>
-          <Container />
-        </PositionAbsoluteContainer>
-      </ContextPositionAbsolute.Provider>
-      <ContextPositionAbsolute.Provider value={createPositionAbsoluteContainerValue(20, 20)}>
-        <PositionAbsoluteContainer>
-          <Container />
-        </PositionAbsoluteContainer>
-      </ContextPositionAbsolute.Provider>
-      <ContextPositionAbsolute.Provider value={createPositionAbsoluteContainerValue(860, 20)}>
-        <PositionAbsoluteContainer>
-          <Container />
-        </PositionAbsoluteContainer>
-      </ContextPositionAbsolute.Provider>
-      <ContextPositionAbsolute.Provider value={createPositionAbsoluteContainerValue(440, 440)}>
-        <PositionAbsoluteContainer>
-          <Container />
-        </PositionAbsoluteContainer>
-      </ContextPositionAbsolute.Provider>
-
-      <ContextPositionAbsolute.Provider value={createPositionAbsoluteContainerValue(20, 20, 1)}>
-        <PositionAbsoluteContainer>
-          <SubscribeContainer subscriberID="a">
-            <Text />
-          </SubscribeContainer>
-        </PositionAbsoluteContainer>
-      </ContextPositionAbsolute.Provider>
-
-      <ContextPositionAbsolute.Provider value={createPositionAbsoluteContainerValue(860, 20, 1)}>
-        <PositionAbsoluteContainer>
-          <SubscribeContainer subscriberID="b">
-            <Text />
-          </SubscribeContainer>
-        </PositionAbsoluteContainer>
-      </ContextPositionAbsolute.Provider>
-
-      <ContextPositionAbsolute.Provider value={createPositionAbsoluteContainerValue(440, 20)}>
-        <PositionAbsoluteContainer>
-          <PublishContainer publishID="a" fnKey="onChange">
-            <Tabs
-              defaultValue="b"
-              data={[
-                { key: 'a', label: 'a', value: 'a' },
-                { key: 'b', label: 'b', value: 'b' },
-                { key: 'c', label: 'c', value: 'c' },
-                { key: 'd', label: 'd', value: 'd' },
-              ]}
-            />
-          </PublishContainer>
-        </PositionAbsoluteContainer>
-      </ContextPositionAbsolute.Provider>
-
-      <ContextPositionAbsolute.Provider value={createPositionAbsoluteContainerValue(440, 440)}>
-        <PositionAbsoluteContainer>
-          <PublishContainer publishID="b" fnKey="onChange">
-            <Tabs
-              defaultValue="c"
-              data={[
-                { key: 'a', label: '123', value: '123' },
-                { key: 'b', label: '456', value: '456' },
-                { key: 'c', label: '789', value: '789' },
-                { key: 'd', label: 'abc', value: 'abc' },
-              ]}
-            />
-          </PublishContainer>
-        </PositionAbsoluteContainer>
-      </ContextPositionAbsolute.Provider>
-    </div>
-  );
 };
 
 export default App;

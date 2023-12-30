@@ -3,14 +3,19 @@ import emitter from '@/emitter';
 interface IPropsSubscribeContainer {
   subscriberID: string;
   children: React.ReactElement;
+  parser?: (v: any) => any;
 }
 
+const DEFAULT_PARSER = (v: any) => v
+
 const SubscribeContainer = (props: IPropsSubscribeContainer) => {
-  const { subscriberID } = props;
+  const { subscriberID, parser = DEFAULT_PARSER } = props;
   const [data, setData] = useState<any>();
 
   const callback = useCallback((data: any) => {
-    setData(data);
+    setData(
+      parser(data)
+    );
   }, []);
 
   useEffect(() => {
